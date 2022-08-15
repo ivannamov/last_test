@@ -13,6 +13,11 @@ import (
 	"time"
 )
 
+const (
+	trainsLength    = 3
+	trainTimeLayout = "15:04:05"
+)
+
 type Trains []Train
 
 type Train struct {
@@ -36,22 +41,18 @@ type TrainJSON struct {
 func main() {
 	// input
 	fmt.Println("Enter departure station:")
-	departureStation, _ := ReadInput()
+	departureStation, inputErr := ReadInput()
 
 	fmt.Println("Enter arrival station:")
-	arrivalStation, _ := ReadInput()
+	arrivalStation, inputErr := ReadInput()
 
 	fmt.Println("Enter criteria:")
-	criteria, _ := ReadInput()
-
-	// handle input error
-	// if inputErr != nil {
-	// 	fmt.Println("reading input failed", inputErr)
-	// }
+	criteria, inputErr := ReadInput()
+	if inputErr != nil {
+		fmt.Println("reading input failed", inputErr)
+	}
 
 	result, err := FindTrains(departureStation, arrivalStation, criteria)
-
-	// handle error
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -84,18 +85,16 @@ func FindTrains(departureStation, arrivalStation, criteria string) (Trains, erro
 		return nil, errors.New("bad arrival station input")
 	}
 
-	trains, _ := ReadTrainsJson()
-
-	// handle json reading error
-	// if jsonError != nil {
-	// 	fmt.Println("reading json failed", jsonError)
-	// }
+	trains, jsonError := ReadTrainsJson()
+	if jsonError != nil {
+		fmt.Println("reading json failed", jsonError)
+	}
 
 	filteredTrains := FilterTrains(trains, departureStationId, arrivalStationId)
 
 	sortedTrains := SortTrains(filteredTrains, criteria)
 
-	lengthTrains := 3
+	lengthTrains := trainsLength
 	if len(sortedTrains) < lengthTrains {
 		lengthTrains = len(sortedTrains)
 	}
@@ -132,13 +131,12 @@ func FilterTrains(trains Trains, departureStationId int, arrivalStationId int) T
 func (train *Train) UnmarshalJSON(data []byte) error {
 	var v TrainJSON
 
-	err := json.Unmarshal(data, &v)
-	if err != nil {
+	if err := json.Unmarshal(data, &v); err != nil {
 		return err
 	}
 
-	departureTime, err := time.Parse("15:04:05", v.DepartureTime)
-	arrivalTime, err := time.Parse("15:04:05", v.ArrivalTime)
+	departureTime, err := time.Parse(trainTimeLayout, v.DepartureTime)
+	arrivalTime, err := time.Parse(trainTimeLayout, v.ArrivalTime)
 
 	if err != nil {
 		return err
@@ -180,5 +178,5 @@ func ReadInput() (string, error) {
 	}
 
 	// remove the delimiter from the string
-	return strings.TrimSuffix(input, "\n"), nil
+	return strings.TrimSuffix(strings.TrimSuffix(input, "\n"), "\r"), nil
 }
