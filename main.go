@@ -130,14 +130,12 @@ func FilterTrains(trains Trains, departureStationId int, arrivalStationId int) T
 
 func (train *Train) UnmarshalJSON(data []byte) error {
 	var v TrainJSON
-
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err
 	}
 
 	departureTime, err := time.Parse(trainTimeLayout, v.DepartureTime)
 	arrivalTime, err := time.Parse(trainTimeLayout, v.ArrivalTime)
-
 	if err != nil {
 		return err
 	}
@@ -161,8 +159,7 @@ func ReadTrainsJson() (Trains, error) {
 
 	// unmarshall data
 	var data Trains
-	err = json.Unmarshal(content, &data)
-	if err != nil {
+	if err = json.Unmarshal(content, &data); err != nil {
 		return nil, err
 	}
 
